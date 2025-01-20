@@ -16,8 +16,8 @@ type User struct {
 	Photo          string         `json:"photo"`
 	SwipeNum       int            `json:"swipe_num"`
 	NextSwipeReset time.Time      `json:"next_swipe_reset"`
-	RSwipes        []*RSwipe      `json:"r_swipes" gorm:"many2many:r_swipes"`
-	LSwipes        []*LSwipe      `json:"l_swipes" gorm:"many2many:l_swipes"`
+	RSwipes        []*User        `json:"r_swipes" gorm:"many2many:r_swipes"`
+	LSwipes        []*User        `json:"l_swipes" gorm:"many2many:l_swipes"`
 }
 
 type RSwipe struct {
