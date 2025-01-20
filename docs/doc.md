@@ -23,3 +23,6 @@ https://github.com/natanhp/yangnder
 ## System Design
 ### ER Diagram
 ![ER Diagram](erd/erd.png)
+
+### Sequence Diagram
+![Sequence Diagram](sequence-diagram/yangnder.jpg)
