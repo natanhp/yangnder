@@ -26,3 +26,8 @@ https://github.com/natanhp/yangnder
 
 ### Sequence Diagram
 ![Sequence Diagram](sequence-diagram/yangnder.jpg)
+
+## List of Test Cases
+Test Case ID | Test Case Scenario | Test Case | Pre-COnditions | Test Steps | Test Data | Expected Results
+--- | --- | --- | --- |--- |--- |--- |
+001 | Make sure user can sign up | Enter required data | User not registered | 1. Register | Name: blabla | Success |
