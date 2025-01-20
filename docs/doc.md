@@ -19,3 +19,7 @@ https://github.com/natanhp/yangnder
 1. Go as the programming language because it is a simple yet fast language with huge community support. Also because the test requirements prefers Go and I want to learn it too.
 2. Gin as the web framework because it is simple but loaded with complete features.
 3. SQLite as the database because it requires no server and suited for a simple application.
+
+## System Design
+### ER Diagram
+![ER Diagram](erd/erd.png)
