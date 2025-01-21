@@ -7,9 +7,11 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
+	"github.com/alexedwards/argon2id"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/natanhp/yangnder/config"
@@ -28,12 +30,14 @@ type UserControllerTestSuite struct {
 	FineOnePath     string
 	CreatePath      string
 	UploadPhotoPath string
+	LoginPath       string
 }
 
 func (suite *UserControllerTestSuite) SetupSuite() {
 	ConnectTest()
 	MigrateTest()
 	PopulateUsersTest()
+	os.Setenv("JWT_SECRET", "secret")
 
 	config.DB = DBTest
 	suite.DB = DBTest
@@ -46,6 +50,7 @@ func (suite *UserControllerTestSuite) SetupSuite() {
 	suite.FineOnePath = "/users/detail/1"
 	suite.CreatePath = "/users/register"
 	suite.UploadPhotoPath = "/users/upload-photo"
+	suite.LoginPath = "/users/login"
 
 	claims := jwt.MapClaims{
 		"sub": float64(1),
@@ -124,19 +129,7 @@ func (suite *UserControllerTestSuite) TestCreate() {
 func (suite *UserControllerTestSuite) TestCreateEmailTaken() {
 	suite.Routes.POST(suite.CreatePath, controllers.Create)
 
-	payload := `
-		{
-			"email": "asdas3@asdsad.com",
-			"password": "asd123",
-			"name": "Adadasd",
-			"desc": "Lorem ipsum",
-			"dob": "2020-01-01"
-		}
-	`
-
-	createUser := models.User{}
-	json.Unmarshal([]byte(payload), &createUser)
-	suite.DB.Create(&createUser)
+	payload := createNewUser(suite)
 
 	req, _ := http.NewRequest(http.MethodPost, suite.CreatePath, strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
@@ -152,6 +145,24 @@ func (suite *UserControllerTestSuite) TestCreateEmailTaken() {
 
 	data := responseBody["error"].(string)
 	assert.Equal(suite.T(), "Email already taken", data)
+}
+
+func createNewUser(suite *UserControllerTestSuite) string {
+	payload := `
+		{
+			"email": "asdas3@asdsad.com",
+			"password": "asd123",
+			"name": "Adadasd",
+			"desc": "Lorem ipsum",
+			"dob": "2020-01-01"
+		}
+	`
+
+	createUser := models.User{}
+	json.Unmarshal([]byte(payload), &createUser)
+	createUser.Password, _ = argon2id.CreateHash(createUser.Password, argon2id.DefaultParams)
+	suite.DB.Create(&createUser)
+	return payload
 }
 
 func (suite *UserControllerTestSuite) TestUploadPhoto() {
@@ -200,6 +211,28 @@ func (suite *UserControllerTestSuite) TestUploadPhotoEmpty() {
 
 	data := responseBody["error"].(string)
 	assert.Equal(suite.T(), "Photo is required", data)
+}
+
+func (suite *UserControllerTestSuite) TestLogin() {
+	suite.Routes.POST(suite.LoginPath, controllers.Login)
+
+	payload := createNewUser(suite)
+	req, _ := http.NewRequest(http.MethodPost, suite.LoginPath, strings.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	suite.Routes.ServeHTTP(rec, req)
+
+	assert.Equal(suite.T(), http.StatusOK, rec.Code)
+
+	var responseBody map[string]interface{}
+	err := json.Unmarshal(rec.Body.Bytes(), &responseBody)
+	assert.NoError(suite.T(), err)
+
+	data := responseBody["data"].(map[string]interface{})
+	token := responseBody["token"].(string)
+	assert.Equal(suite.T(), "asdas3@asdsad.com", data["email"])
+	assert.NotEmpty(suite.T(), token)
 }
 
 func TestUserControllerTestSuite(t *testing.T) {

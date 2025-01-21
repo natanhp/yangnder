@@ -19,7 +19,7 @@ func UserRoutes(route *gin.Engine) {
 	user.POST("/register", Create)
 	user.GET("/detail/:id", auth.AuthenticateMiddleware, FindOne)
 	user.POST("/upload-photo", auth.AuthenticateMiddleware, UploadPhoto)
-	user.POST("/login", login)
+	user.POST("/login", Login)
 }
 
 func FindAll(c *gin.Context) {
@@ -155,7 +155,7 @@ func UploadPhoto(c *gin.Context) {
 	})
 }
 
-func login(c *gin.Context) {
+func Login(c *gin.Context) {
 	var user models.User
 	c.ShouldBindJSON(&user)
 
