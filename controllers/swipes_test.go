@@ -20,8 +20,10 @@ import (
 
 type SwipesControllerTestSuite struct {
 	suite.Suite
-	DB     *gorm.DB
-	Routes *gin.Engine
+	DB        *gorm.DB
+	Routes    *gin.Engine
+	LeftPath  string
+	RightPath string
 }
 
 func (suite *SwipesControllerTestSuite) SetupSuite() {
@@ -32,12 +34,13 @@ func (suite *SwipesControllerTestSuite) SetupSuite() {
 	config.DB = DBTest
 	suite.DB = DBTest
 
+	suite.LeftPath = "/swipes/left"
+	suite.RightPath = "/swipes/right"
+
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	suite.Routes = router
-}
 
-func (suite *SwipesControllerTestSuite) TestRight() {
 	claims := jwt.MapClaims{
 		"sub": float64(1),
 	}
@@ -46,10 +49,16 @@ func (suite *SwipesControllerTestSuite) TestRight() {
 		c.Next()
 	})
 
-	suite.Routes.PATCH("/swipes/right", controllers.Right)
+	suite.Routes.PATCH(suite.RightPath, controllers.Right)
+	suite.Routes.PATCH(suite.LeftPath, controllers.Left)
+}
+
+func (suite *SwipesControllerTestSuite) TestRight() {
+	suite.DB.Model(&models.User{}).Where("id = ?", 1).Update("swipe_num", 10)
+	suite.deleteSwipes()
 
 	payload := `{ "r_swipe_id": 2 }`
-	req, _ := http.NewRequest(http.MethodPatch, "/swipes/right", strings.NewReader(payload))
+	req, _ := http.NewRequest(http.MethodPatch, suite.RightPath, strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
@@ -63,24 +72,19 @@ func (suite *SwipesControllerTestSuite) TestRight() {
 
 	data := responseBody["data"].(map[string]interface{})
 	user := responseBody["user"].(map[string]interface{})
-	assert.Equal(suite.T(), float64(2), user["id"])
+	assert.Equal(suite.T(), float64(1), user["id"])
 	assert.Equal(suite.T(), float64(1), data["user_id"].(float64))
 	assert.Equal(suite.T(), float64(2), data["r_swipe_id"].(float64))
 }
 
+func (suite *SwipesControllerTestSuite) deleteSwipes() {
+	suite.DB.Where("user_id = ?", 1).Delete(&models.LSwipe{})
+	suite.DB.Where("user_id = ?", 1).Delete(&models.RSwipe{})
+}
+
 func (suite *SwipesControllerTestSuite) TestRightUserNotFound() {
-	claims := jwt.MapClaims{
-		"sub": float64(1),
-	}
-	suite.Routes.Use(func(c *gin.Context) {
-		c.Set("claims", claims)
-		c.Next()
-	})
-
-	suite.Routes.PATCH("/swipes/right", controllers.Right)
-
 	payload := `{ "r_swipe_id": 1001 }`
-	req, _ := http.NewRequest(http.MethodPatch, "/swipes/right", strings.NewReader(payload))
+	req, _ := http.NewRequest(http.MethodPatch, suite.RightPath, strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
@@ -97,20 +101,11 @@ func (suite *SwipesControllerTestSuite) TestRightUserNotFound() {
 }
 
 func (suite *SwipesControllerTestSuite) TestRightOutOfSwipe() {
-	claims := jwt.MapClaims{
-		"sub": float64(1),
-	}
-	suite.Routes.Use(func(c *gin.Context) {
-		c.Set("claims", claims)
-		c.Next()
-	})
-
-	suite.Routes.PATCH("/swipes/right", controllers.Right)
-
-	suite.DB.Model(&models.User{}).Where("id = ?", 2).Update("swipe_num", 0)
+	suite.DB.Model(&models.User{}).Where("id = ?", 1).Update("swipe_num", 0)
+	suite.deleteSwipes()
 
 	payload := `{ "r_swipe_id": 2 }`
-	req, _ := http.NewRequest(http.MethodPatch, "/swipes/right", strings.NewReader(payload))
+	req, _ := http.NewRequest(http.MethodPatch, suite.RightPath, strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
@@ -127,23 +122,13 @@ func (suite *SwipesControllerTestSuite) TestRightOutOfSwipe() {
 }
 
 func (suite *SwipesControllerTestSuite) TestRightAlreadyRSwiped() {
-	claims := jwt.MapClaims{
-		"sub": float64(1),
-	}
-	suite.Routes.Use(func(c *gin.Context) {
-		c.Set("claims", claims)
-		c.Next()
-	})
-
-	suite.Routes.PATCH("/swipes/right", controllers.Right)
-
 	suite.DB.Create(&models.RSwipe{
 		UserID:   1,
 		RSwipeID: 2,
 	})
 
 	payload := `{ "r_swipe_id": 2 }`
-	req, _ := http.NewRequest(http.MethodPatch, "/swipes/right", strings.NewReader(payload))
+	req, _ := http.NewRequest(http.MethodPatch, suite.RightPath, strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
@@ -160,16 +145,6 @@ func (suite *SwipesControllerTestSuite) TestRightAlreadyRSwiped() {
 }
 
 func (suite *SwipesControllerTestSuite) TestRightAlreadyLSwiped() {
-	claims := jwt.MapClaims{
-		"sub": float64(1),
-	}
-	suite.Routes.Use(func(c *gin.Context) {
-		c.Set("claims", claims)
-		c.Next()
-	})
-
-	suite.Routes.PATCH("/swipes/right", controllers.Right)
-
 	suite.DB.Create(&models.LSwipe{
 		UserID:   1,
 		LSwipeID: 2,
@@ -177,7 +152,7 @@ func (suite *SwipesControllerTestSuite) TestRightAlreadyLSwiped() {
 	})
 
 	payload := `{ "r_swipe_id": 2 }`
-	req, _ := http.NewRequest(http.MethodPatch, "/swipes/right", strings.NewReader(payload))
+	req, _ := http.NewRequest(http.MethodPatch, suite.RightPath, strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
@@ -194,18 +169,8 @@ func (suite *SwipesControllerTestSuite) TestRightAlreadyLSwiped() {
 }
 
 func (suite *SwipesControllerTestSuite) TestLeft() {
-	claims := jwt.MapClaims{
-		"sub": float64(1),
-	}
-	suite.Routes.Use(func(c *gin.Context) {
-		c.Set("claims", claims)
-		c.Next()
-	})
-
-	suite.Routes.PATCH("/swipes/left", controllers.Left)
-
 	payload := `{ "l_swipe_id": 2 }`
-	req, _ := http.NewRequest(http.MethodPatch, "/swipes/left", strings.NewReader(payload))
+	req, _ := http.NewRequest(http.MethodPatch, suite.LeftPath, strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
@@ -219,24 +184,14 @@ func (suite *SwipesControllerTestSuite) TestLeft() {
 
 	data := responseBody["data"].(map[string]interface{})
 	user := responseBody["user"].(map[string]interface{})
-	assert.Equal(suite.T(), float64(2), user["id"])
+	assert.Equal(suite.T(), float64(1), user["id"])
 	assert.Equal(suite.T(), float64(1), data["user_id"].(float64))
 	assert.Equal(suite.T(), float64(2), data["l_swipe_id"].(float64))
 }
 
 func (suite *SwipesControllerTestSuite) TestLeftUserNotFound() {
-	claims := jwt.MapClaims{
-		"sub": float64(1),
-	}
-	suite.Routes.Use(func(c *gin.Context) {
-		c.Set("claims", claims)
-		c.Next()
-	})
-
-	suite.Routes.PATCH("/swipes/left", controllers.Left)
-
 	payload := `{ "l_swipe_id": 1001 }`
-	req, _ := http.NewRequest(http.MethodPatch, "/swipes/left", strings.NewReader(payload))
+	req, _ := http.NewRequest(http.MethodPatch, suite.LeftPath, strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
@@ -253,20 +208,11 @@ func (suite *SwipesControllerTestSuite) TestLeftUserNotFound() {
 }
 
 func (suite *SwipesControllerTestSuite) TestLeftOutOfSwipe() {
-	claims := jwt.MapClaims{
-		"sub": float64(1),
-	}
-	suite.Routes.Use(func(c *gin.Context) {
-		c.Set("claims", claims)
-		c.Next()
-	})
-
-	suite.Routes.PATCH("/swipes/left", controllers.Left)
-
-	suite.DB.Model(&models.User{}).Where("id = ?", 2).Update("swipe_num", 0)
+	suite.DB.Model(&models.User{}).Where("id = ?", 1).Update("swipe_num", 0)
+	suite.deleteSwipes()
 
 	payload := `{ "l_swipe_id": 2 }`
-	req, _ := http.NewRequest(http.MethodPatch, "/swipes/left", strings.NewReader(payload))
+	req, _ := http.NewRequest(http.MethodPatch, suite.LeftPath, strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
@@ -283,23 +229,13 @@ func (suite *SwipesControllerTestSuite) TestLeftOutOfSwipe() {
 }
 
 func (suite *SwipesControllerTestSuite) TestLeftAlreadyRSwiped() {
-	claims := jwt.MapClaims{
-		"sub": float64(1),
-	}
-	suite.Routes.Use(func(c *gin.Context) {
-		c.Set("claims", claims)
-		c.Next()
-	})
-
-	suite.Routes.PATCH("/swipes/left", controllers.Left)
-
 	suite.DB.Create(&models.RSwipe{
 		UserID:   1,
 		RSwipeID: 2,
 	})
 
 	payload := `{ "l_swipe_id": 2 }`
-	req, _ := http.NewRequest(http.MethodPatch, "/swipes/left", strings.NewReader(payload))
+	req, _ := http.NewRequest(http.MethodPatch, suite.LeftPath, strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
@@ -316,16 +252,6 @@ func (suite *SwipesControllerTestSuite) TestLeftAlreadyRSwiped() {
 }
 
 func (suite *SwipesControllerTestSuite) TestLeftAlreadyLSwiped() {
-	claims := jwt.MapClaims{
-		"sub": float64(1),
-	}
-	suite.Routes.Use(func(c *gin.Context) {
-		c.Set("claims", claims)
-		c.Next()
-	})
-
-	suite.Routes.PATCH("/swipes/left", controllers.Left)
-
 	suite.DB.Create(&models.LSwipe{
 		UserID:   1,
 		LSwipeID: 2,
@@ -333,7 +259,7 @@ func (suite *SwipesControllerTestSuite) TestLeftAlreadyLSwiped() {
 	})
 
 	payload := `{ "l_swipe_id": 2 }`
-	req, _ := http.NewRequest(http.MethodPatch, "/swipes/left", strings.NewReader(payload))
+	req, _ := http.NewRequest(http.MethodPatch, suite.LeftPath, strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 

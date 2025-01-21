@@ -22,6 +22,8 @@ func Right(c *gin.Context) {
 	claims := c.MustGet("claims").(jwt.MapClaims)
 	userID := uint(claims["sub"].(float64))
 
+	var swiper models.User
+	config.DB.First(&swiper, userID)
 	var existingUser models.User
 	config.DB.First(&existingUser, swipe.RSwipeID)
 
@@ -33,7 +35,7 @@ func Right(c *gin.Context) {
 		return
 	}
 
-	if existingUser.SwipeNum <= 0 {
+	if swiper.SwipeNum <= 0 {
 		c.JSON(400, gin.H{
 			"error": "Out of swipes",
 		})
@@ -66,11 +68,11 @@ func Right(c *gin.Context) {
 	swipe.UserID = userID
 
 	config.DB.Create(&swipe)
-	config.DB.Model(&existingUser).Update("swipe_num", existingUser.SwipeNum-1)
+	config.DB.Model(&swiper).Update("swipe_num", swiper.SwipeNum-1)
 
 	c.JSON(201, gin.H{
 		"data": swipe,
-		"user": existingUser,
+		"user": swiper,
 	})
 }
 
@@ -80,6 +82,8 @@ func Left(c *gin.Context) {
 	claims := c.MustGet("claims").(jwt.MapClaims)
 	userID := uint(claims["sub"].(float64))
 
+	var swiper models.User
+	config.DB.First(&swiper, userID)
 	var existingUser models.User
 	config.DB.First(&existingUser, swipe.LSwipeID)
 
@@ -91,7 +95,7 @@ func Left(c *gin.Context) {
 		return
 	}
 
-	if existingUser.SwipeNum <= 0 {
+	if swiper.SwipeNum <= 0 {
 		c.JSON(400, gin.H{
 			"error": "Out of swipes",
 		})
@@ -125,10 +129,10 @@ func Left(c *gin.Context) {
 	swipe.DeleteOn = time.Now().AddDate(0, 0, 1)
 
 	config.DB.Create(&swipe)
-	config.DB.Model(&existingUser).Update("swipe_num", existingUser.SwipeNum-1)
+	config.DB.Model(&swiper).Update("swipe_num", swiper.SwipeNum-1)
 
 	c.JSON(201, gin.H{
 		"data": swipe,
-		"user": existingUser,
+		"user": swiper,
 	})
 }
