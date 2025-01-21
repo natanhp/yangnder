@@ -5,6 +5,7 @@ import (
 
 	"github.com/alexedwards/argon2id"
 	"github.com/gin-gonic/gin"
+	"github.com/natanhp/yangnder/auth"
 	"github.com/natanhp/yangnder/config"
 	"github.com/natanhp/yangnder/models"
 )
@@ -138,7 +139,17 @@ func login(c *gin.Context) {
 
 	existingUser.Password = ""
 
+	token, err := auth.CreateToken(existingUser.ID)
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": "Failed to login",
+		})
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"data": existingUser,
+		"data":  existingUser,
+		"token": token,
 	})
 }
