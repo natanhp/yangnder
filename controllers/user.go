@@ -15,6 +15,7 @@ import (
 
 func UserRoutes(route *gin.Engine) {
 	user := route.Group("/users")
+	user.Static("/photos", "photos")
 	user.GET("", auth.AuthenticateMiddleware, FindAll)
 	user.POST("/register", Create)
 	user.GET("/detail/:id", auth.AuthenticateMiddleware, FindOne)
