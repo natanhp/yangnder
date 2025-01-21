@@ -10,10 +10,10 @@ import (
 
 func PremiumRoutes(route *gin.Engine) {
 	premium := route.Group("/premiums", auth.AuthenticateMiddleware)
-	premium.PATCH("/buy", buyPremium)
+	premium.PATCH("/buy", BuyPremium)
 }
 
-func buyPremium(c *gin.Context) {
+func BuyPremium(c *gin.Context) {
 	claims := c.MustGet("claims").(jwt.MapClaims)
 	userID := uint(claims["sub"].(float64))
 	var user models.User
