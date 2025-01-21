@@ -17,7 +17,7 @@ func UserRoutes(route *gin.Engine) {
 	user := route.Group("/users")
 	user.GET("", auth.AuthenticateMiddleware, FindAll)
 	user.POST("/register", create)
-	user.GET("/detail", auth.AuthenticateMiddleware, findOne)
+	user.GET("/detail/:id", auth.AuthenticateMiddleware, FindOne)
 	user.POST("/upload-photo", auth.AuthenticateMiddleware, uploadPhoto)
 	user.POST("/login", login)
 }
@@ -70,7 +70,7 @@ func FindAll(c *gin.Context) {
 	})
 }
 
-func findOne(c *gin.Context) {
+func FindOne(c *gin.Context) {
 	var user models.User
 	config.DB.First(&user, c.Param("id"))
 

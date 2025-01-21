@@ -36,6 +36,7 @@ func (suite *UserControllerTestSuite) SetupSuite() {
 	suite.Routes = router
 
 	suite.FindAllPath = "/users"
+	suite.FineOnePath = "/users/detail/1"
 
 	claims := jwt.MapClaims{
 		"sub": float64(1),
@@ -65,23 +66,23 @@ func (suite *UserControllerTestSuite) TestFindAll() {
 	assert.Equal(suite.T(), 10, len(data))
 }
 
-// func (suite *UserControllerTestSuite) TestFindOne() {
-// 	suite.Routes.PATCH(suite.FindAllPath, controllers.FindAll)
+func (suite *UserControllerTestSuite) TestFindOne() {
+	suite.Routes.GET(suite.FineOnePath, controllers.FindOne)
 
-// 	req, _ := http.NewRequest(http.MethodPatch, suite.FindAllPath, nil)
-// 	rec := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, suite.FineOnePath, nil)
+	rec := httptest.NewRecorder()
 
-// 	suite.Routes.ServeHTTP(rec, req)
+	suite.Routes.ServeHTTP(rec, req)
 
-// 	assert.Equal(suite.T(), http.StatusOK, rec.Code)
+	assert.Equal(suite.T(), http.StatusOK, rec.Code)
 
-// 	var responseBody map[string]interface{}
-// 	err := json.Unmarshal(rec.Body.Bytes(), &responseBody)
-// 	assert.NoError(suite.T(), err)
+	var responseBody map[string]interface{}
+	err := json.Unmarshal(rec.Body.Bytes(), &responseBody)
+	assert.NoError(suite.T(), err)
 
-// 	data := responseBody["data"].([]interface{})
-// 	assert.Equal(suite.T(), 10, len(data))
-// }
+	data := responseBody["data"].(map[string]interface{})
+	assert.Equal(suite.T(), float64(1), data["id"])
+}
 
 func TestUserControllerTestSuite(t *testing.T) {
 	suite.Run(t, new(UserControllerTestSuite))
