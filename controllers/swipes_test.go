@@ -224,6 +224,34 @@ func (suite *SwipesControllerTestSuite) TestLeft() {
 	assert.Equal(suite.T(), float64(2), data["l_swipe_id"].(float64))
 }
 
+func (suite *SwipesControllerTestSuite) TestLeftUserNotFound() {
+	claims := jwt.MapClaims{
+		"sub": float64(1),
+	}
+	suite.Routes.Use(func(c *gin.Context) {
+		c.Set("claims", claims)
+		c.Next()
+	})
+
+	suite.Routes.PATCH("/swipes/left", controllers.Right)
+
+	payload := `{ "l_swipe_id": 1001 }`
+	req, _ := http.NewRequest(http.MethodPatch, "/swipes/left", strings.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	suite.Routes.ServeHTTP(rec, req)
+
+	assert.Equal(suite.T(), http.StatusBadRequest, rec.Code)
+
+	var responseBody map[string]interface{}
+	err := json.Unmarshal(rec.Body.Bytes(), &responseBody)
+	assert.NoError(suite.T(), err)
+
+	data := responseBody["error"].(string)
+	assert.Equal(suite.T(), "User not found", data)
+}
+
 func TestSwipeControllerTestSuite(t *testing.T) {
 	suite.Run(t, new(SwipesControllerTestSuite))
 }
