@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -21,6 +22,7 @@ type UserControllerTestSuite struct {
 	Routes      *gin.Engine
 	FindAllPath string
 	FineOnePath string
+	CreatePath  string
 }
 
 func (suite *UserControllerTestSuite) SetupSuite() {
@@ -37,6 +39,7 @@ func (suite *UserControllerTestSuite) SetupSuite() {
 
 	suite.FindAllPath = "/users"
 	suite.FineOnePath = "/users/detail/1"
+	suite.CreatePath = "/users/register"
 
 	claims := jwt.MapClaims{
 		"sub": float64(1),
@@ -82,6 +85,34 @@ func (suite *UserControllerTestSuite) TestFindOne() {
 
 	data := responseBody["data"].(map[string]interface{})
 	assert.Equal(suite.T(), float64(1), data["id"])
+}
+
+func (suite *UserControllerTestSuite) TestCreate() {
+	suite.Routes.POST(suite.CreatePath, controllers.Create)
+
+	payload := `
+		{
+			"email": "asdas3@asdsad.com",
+			"password": "asd123",
+			"name": "Adadasd",
+			"desc": "Lorem ipsum",
+			"dob": "2020-01-01"
+		}
+	`
+	req, _ := http.NewRequest(http.MethodPost, suite.CreatePath, strings.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	suite.Routes.ServeHTTP(rec, req)
+
+	assert.Equal(suite.T(), http.StatusOK, rec.Code)
+
+	var responseBody map[string]interface{}
+	err := json.Unmarshal(rec.Body.Bytes(), &responseBody)
+	assert.NoError(suite.T(), err)
+
+	data := responseBody["data"].(map[string]interface{})
+	assert.Equal(suite.T(), "asdas3@asdsad.com", data["email"])
 }
 
 func TestUserControllerTestSuite(t *testing.T) {

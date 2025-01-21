@@ -16,7 +16,7 @@ import (
 func UserRoutes(route *gin.Engine) {
 	user := route.Group("/users")
 	user.GET("", auth.AuthenticateMiddleware, FindAll)
-	user.POST("/register", create)
+	user.POST("/register", Create)
 	user.GET("/detail/:id", auth.AuthenticateMiddleware, FindOne)
 	user.POST("/upload-photo", auth.AuthenticateMiddleware, uploadPhoto)
 	user.POST("/login", login)
@@ -79,7 +79,7 @@ func FindOne(c *gin.Context) {
 	})
 }
 
-func create(c *gin.Context) {
+func Create(c *gin.Context) {
 	var user models.User
 	c.ShouldBindJSON(&user)
 
