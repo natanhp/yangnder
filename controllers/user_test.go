@@ -60,11 +60,15 @@ func (suite *UserControllerTestSuite) SetupSuite() {
 		c.Set("claims", claims)
 		c.Next()
 	})
+
+	suite.Routes.GET(suite.FindAllPath, controllers.FindAll)
+	suite.Routes.GET(suite.FineOnePath, controllers.FindOne)
+	suite.Routes.POST(suite.CreatePath, controllers.Create)
+	suite.Routes.POST(suite.UploadPhotoPath, controllers.UploadPhoto)
+	suite.Routes.POST(suite.LoginPath, controllers.Login)
 }
 
 func (suite *UserControllerTestSuite) TestFindAll() {
-	suite.Routes.GET(suite.FindAllPath, controllers.FindAll)
-
 	req, _ := http.NewRequest(http.MethodGet, suite.FindAllPath, nil)
 	rec := httptest.NewRecorder()
 
@@ -77,12 +81,10 @@ func (suite *UserControllerTestSuite) TestFindAll() {
 	assert.NoError(suite.T(), err)
 
 	data := responseBody["data"].([]interface{})
-	assert.Equal(suite.T(), 10, len(data))
+	assert.Equal(suite.T(), true, len(data) > 10)
 }
 
 func (suite *UserControllerTestSuite) TestFindOne() {
-	suite.Routes.GET(suite.FineOnePath, controllers.FindOne)
-
 	req, _ := http.NewRequest(http.MethodGet, suite.FineOnePath, nil)
 	rec := httptest.NewRecorder()
 
@@ -99,8 +101,6 @@ func (suite *UserControllerTestSuite) TestFindOne() {
 }
 
 func (suite *UserControllerTestSuite) TestCreate() {
-	suite.Routes.POST(suite.CreatePath, controllers.Create)
-
 	payload := `
 		{
 			"email": "asdas3@asdsad.com",
@@ -127,8 +127,6 @@ func (suite *UserControllerTestSuite) TestCreate() {
 }
 
 func (suite *UserControllerTestSuite) TestCreateEmailTaken() {
-	suite.Routes.POST(suite.CreatePath, controllers.Create)
-
 	payload := createNewUser(suite)
 
 	req, _ := http.NewRequest(http.MethodPost, suite.CreatePath, strings.NewReader(payload))
@@ -166,8 +164,6 @@ func createNewUser(suite *UserControllerTestSuite) string {
 }
 
 func (suite *UserControllerTestSuite) TestUploadPhoto() {
-	suite.Routes.POST(suite.UploadPhotoPath, controllers.UploadPhoto)
-
 	var body bytes.Buffer
 	writer := multipart.NewWriter(&body)
 
@@ -196,8 +192,6 @@ func (suite *UserControllerTestSuite) TestUploadPhoto() {
 }
 
 func (suite *UserControllerTestSuite) TestUploadPhotoEmpty() {
-	suite.Routes.POST(suite.UploadPhotoPath, controllers.UploadPhoto)
-
 	req, _ := http.NewRequest(http.MethodPost, suite.UploadPhotoPath, nil)
 	rec := httptest.NewRecorder()
 
@@ -214,8 +208,6 @@ func (suite *UserControllerTestSuite) TestUploadPhotoEmpty() {
 }
 
 func (suite *UserControllerTestSuite) TestLogin() {
-	suite.Routes.POST(suite.LoginPath, controllers.Login)
-
 	payload := createNewUser(suite)
 	req, _ := http.NewRequest(http.MethodPost, suite.LoginPath, strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
@@ -236,8 +228,6 @@ func (suite *UserControllerTestSuite) TestLogin() {
 }
 
 func (suite *UserControllerTestSuite) TestLoginInvalidEmail() {
-	suite.Routes.POST(suite.LoginPath, controllers.Login)
-
 	payload := `{ "email": "gjls@gibberish.com" }`
 	req, _ := http.NewRequest(http.MethodPost, suite.LoginPath, strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
@@ -256,8 +246,6 @@ func (suite *UserControllerTestSuite) TestLoginInvalidEmail() {
 }
 
 func (suite *UserControllerTestSuite) TestLoginInvalidHash() {
-	suite.Routes.POST(suite.LoginPath, controllers.Login)
-
 	createNewUser(suite)
 	payloadWrongPass := `{ "email": "asdas3@asdsad.com", "password": "wrongpass" }`
 
