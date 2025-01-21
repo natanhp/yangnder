@@ -20,6 +20,7 @@ type UserControllerTestSuite struct {
 	DB          *gorm.DB
 	Routes      *gin.Engine
 	FindAllPath string
+	FineOnePath string
 }
 
 func (suite *UserControllerTestSuite) SetupSuite() {
@@ -34,7 +35,7 @@ func (suite *UserControllerTestSuite) SetupSuite() {
 	router := gin.New()
 	suite.Routes = router
 
-	suite.FindAllPath = "/users/findAll"
+	suite.FindAllPath = "/users"
 
 	claims := jwt.MapClaims{
 		"sub": float64(1),
@@ -47,9 +48,9 @@ func (suite *UserControllerTestSuite) SetupSuite() {
 }
 
 func (suite *UserControllerTestSuite) TestFindAll() {
-	suite.Routes.PATCH(suite.FindAllPath, controllers.FindAll)
+	suite.Routes.GET(suite.FindAllPath, controllers.FindAll)
 
-	req, _ := http.NewRequest(http.MethodPatch, suite.FindAllPath, nil)
+	req, _ := http.NewRequest(http.MethodGet, suite.FindAllPath, nil)
 	rec := httptest.NewRecorder()
 
 	suite.Routes.ServeHTTP(rec, req)
@@ -63,6 +64,24 @@ func (suite *UserControllerTestSuite) TestFindAll() {
 	data := responseBody["data"].([]interface{})
 	assert.Equal(suite.T(), 10, len(data))
 }
+
+// func (suite *UserControllerTestSuite) TestFindOne() {
+// 	suite.Routes.PATCH(suite.FindAllPath, controllers.FindAll)
+
+// 	req, _ := http.NewRequest(http.MethodPatch, suite.FindAllPath, nil)
+// 	rec := httptest.NewRecorder()
+
+// 	suite.Routes.ServeHTTP(rec, req)
+
+// 	assert.Equal(suite.T(), http.StatusOK, rec.Code)
+
+// 	var responseBody map[string]interface{}
+// 	err := json.Unmarshal(rec.Body.Bytes(), &responseBody)
+// 	assert.NoError(suite.T(), err)
+
+// 	data := responseBody["data"].([]interface{})
+// 	assert.Equal(suite.T(), 10, len(data))
+// }
 
 func TestUserControllerTestSuite(t *testing.T) {
 	suite.Run(t, new(UserControllerTestSuite))
