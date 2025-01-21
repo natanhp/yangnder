@@ -255,6 +255,39 @@ func (suite *UserControllerTestSuite) TestLoginInvalidEmail() {
 	assert.Equal(suite.T(), "Invalid email or password", data)
 }
 
+func (suite *UserControllerTestSuite) TestLoginInvalidHash() {
+	suite.Routes.POST(suite.LoginPath, controllers.Login)
+
+	payload := `
+		{
+			"email": "asdas3@asdsad.com",
+			"password": "asd123",
+			"name": "Adadasd",
+			"desc": "Lorem ipsum",
+			"dob": "2020-01-01"
+		}
+	`
+
+	createUser := models.User{}
+	json.Unmarshal([]byte(payload), &createUser)
+	suite.DB.Create(&createUser)
+
+	req, _ := http.NewRequest(http.MethodPost, suite.LoginPath, strings.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	suite.Routes.ServeHTTP(rec, req)
+
+	assert.Equal(suite.T(), http.StatusInternalServerError, rec.Code)
+
+	var responseBody map[string]interface{}
+	err := json.Unmarshal(rec.Body.Bytes(), &responseBody)
+	assert.NoError(suite.T(), err)
+
+	data := responseBody["error"].(string)
+	assert.Equal(suite.T(), "Failed to login", data)
+}
+
 func TestUserControllerTestSuite(t *testing.T) {
 	suite.Run(t, new(UserControllerTestSuite))
 }
