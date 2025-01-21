@@ -8,7 +8,7 @@ import (
 )
 
 func resetSwipeNumber() {
-	config.DB.Model(&models.User{}).Where("next_swipe_reset <=", time.Now()).Updates(map[string]interface{}{
+	config.DB.Model(&models.User{}).Where("next_swipe_reset <= ?", time.Now()).Updates(map[string]interface{}{
 		"swipe_num":        10,
 		"next_swipe_reset": time.Now().AddDate(0, 0, 1),
 	})
