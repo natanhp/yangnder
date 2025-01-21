@@ -1,6 +1,9 @@
 package auth
 
-import "github.com/golang-jwt/jwt/v5"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+)
 
 var secretKey = []byte("secret")
 
@@ -16,4 +19,35 @@ func CreateToken(id uint) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+func AuthenticateMiddleware(c *gin.Context) {
+	token := c.GetHeader("Authorization")
+
+	if token == "" {
+		c.JSON(401, gin.H{
+			"error": "Unauthorized",
+		})
+		c.Abort()
+		return
+	}
+
+	token = token[7:]
+
+	claims := jwt.MapClaims{}
+
+	_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+		return secretKey, nil
+	})
+
+	if err != nil {
+		c.JSON(401, gin.H{
+			"error": "Unauthorized",
+		})
+		c.Abort()
+		return
+	}
+
+	c.Set("claims", claims)
+	c.Next()
 }

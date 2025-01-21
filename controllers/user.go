@@ -1,10 +1,13 @@
 package controllers
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/natanhp/yangnder/auth"
 	"github.com/natanhp/yangnder/config"
 	"github.com/natanhp/yangnder/models"
@@ -12,16 +15,17 @@ import (
 
 func UserRoutes(route *gin.Engine) {
 	user := route.Group("/users")
-	user.GET("", findAll)
+	user.GET("", auth.AuthenticateMiddleware, findAll)
 	user.POST("/register", create)
-	user.GET("/detail", findOne)
-	user.POST("/upload-photo", uploadPhoto)
+	user.GET("/detail", auth.AuthenticateMiddleware, findOne)
+	user.POST("/upload-photo", auth.AuthenticateMiddleware, uploadPhoto)
 	user.POST("/login", login)
 }
 
 func findAll(c *gin.Context) {
 	var users []models.User
 	config.DB.Find(&users)
+
 	c.JSON(200, gin.H{
 		"data": users,
 	})
@@ -81,7 +85,10 @@ func create(c *gin.Context) {
 
 func uploadPhoto(c *gin.Context) {
 	var user models.User
-	config.DB.First(&user, c.Param("id"))
+	claims := c.MustGet("claims").(jwt.MapClaims)
+	id := uint(claims["sub"].(float64))
+
+	config.DB.First(&user, id)
 
 	file, err := c.FormFile("photo")
 	if err != nil {
@@ -91,7 +98,9 @@ func uploadPhoto(c *gin.Context) {
 		return
 	}
 
-	err = c.SaveUploadedFile(file, "photos/"+file.Filename)
+	fileName := fmt.Sprintf("%d-%s", time.Now().Unix(), file.Filename)
+	os.Remove("photos/" + user.Photo)
+	err = c.SaveUploadedFile(file, "photos/"+fileName)
 	if err != nil {
 		c.JSON(500, gin.H{
 			"error": "Failed to save photo",
@@ -99,7 +108,7 @@ func uploadPhoto(c *gin.Context) {
 		return
 	}
 
-	user.Photo = file.Filename
+	user.Photo = fileName
 	config.DB.Save(&user)
 
 	c.JSON(200, gin.H{
