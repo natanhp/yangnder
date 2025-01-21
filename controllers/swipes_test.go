@@ -233,7 +233,7 @@ func (suite *SwipesControllerTestSuite) TestLeftUserNotFound() {
 		c.Next()
 	})
 
-	suite.Routes.PATCH("/swipes/left", controllers.Right)
+	suite.Routes.PATCH("/swipes/left", controllers.Left)
 
 	payload := `{ "l_swipe_id": 1001 }`
 	req, _ := http.NewRequest(http.MethodPatch, "/swipes/left", strings.NewReader(payload))
@@ -250,6 +250,36 @@ func (suite *SwipesControllerTestSuite) TestLeftUserNotFound() {
 
 	data := responseBody["error"].(string)
 	assert.Equal(suite.T(), "User not found", data)
+}
+
+func (suite *SwipesControllerTestSuite) TestLeftOutOfSwipe() {
+	claims := jwt.MapClaims{
+		"sub": float64(1),
+	}
+	suite.Routes.Use(func(c *gin.Context) {
+		c.Set("claims", claims)
+		c.Next()
+	})
+
+	suite.Routes.PATCH("/swipes/left", controllers.Left)
+
+	suite.DB.Model(&models.User{}).Where("id = ?", 2).Update("swipe_num", 0)
+
+	payload := `{ "l_swipe_id": 2 }`
+	req, _ := http.NewRequest(http.MethodPatch, "/swipes/left", strings.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	suite.Routes.ServeHTTP(rec, req)
+
+	assert.Equal(suite.T(), http.StatusBadRequest, rec.Code)
+
+	var responseBody map[string]interface{}
+	err := json.Unmarshal(rec.Body.Bytes(), &responseBody)
+	assert.NoError(suite.T(), err)
+
+	data := responseBody["error"].(string)
+	assert.Equal(suite.T(), "Out of swipes", data)
 }
 
 func TestSwipeControllerTestSuite(t *testing.T) {
