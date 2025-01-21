@@ -18,7 +18,7 @@ func UserRoutes(route *gin.Engine) {
 	user.GET("", auth.AuthenticateMiddleware, FindAll)
 	user.POST("/register", Create)
 	user.GET("/detail/:id", auth.AuthenticateMiddleware, FindOne)
-	user.POST("/upload-photo", auth.AuthenticateMiddleware, uploadPhoto)
+	user.POST("/upload-photo", auth.AuthenticateMiddleware, UploadPhoto)
 	user.POST("/login", login)
 }
 
@@ -117,12 +117,12 @@ func Create(c *gin.Context) {
 
 	user.Password = ""
 
-	c.JSON(200, gin.H{
+	c.JSON(201, gin.H{
 		"data": user,
 	})
 }
 
-func uploadPhoto(c *gin.Context) {
+func UploadPhoto(c *gin.Context) {
 	var user models.User
 	claims := c.MustGet("claims").(jwt.MapClaims)
 	id := uint(claims["sub"].(float64))

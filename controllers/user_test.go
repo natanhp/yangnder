@@ -1,7 +1,10 @@
 package controllers_test
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -19,11 +22,12 @@ import (
 
 type UserControllerTestSuite struct {
 	suite.Suite
-	DB          *gorm.DB
-	Routes      *gin.Engine
-	FindAllPath string
-	FineOnePath string
-	CreatePath  string
+	DB              *gorm.DB
+	Routes          *gin.Engine
+	FindAllPath     string
+	FineOnePath     string
+	CreatePath      string
+	UploadPhotoPath string
 }
 
 func (suite *UserControllerTestSuite) SetupSuite() {
@@ -41,6 +45,7 @@ func (suite *UserControllerTestSuite) SetupSuite() {
 	suite.FindAllPath = "/users"
 	suite.FineOnePath = "/users/detail/1"
 	suite.CreatePath = "/users/register"
+	suite.UploadPhotoPath = "/users/upload-photo"
 
 	claims := jwt.MapClaims{
 		"sub": float64(1),
@@ -106,7 +111,7 @@ func (suite *UserControllerTestSuite) TestCreate() {
 
 	suite.Routes.ServeHTTP(rec, req)
 
-	assert.Equal(suite.T(), http.StatusOK, rec.Code)
+	assert.Equal(suite.T(), http.StatusCreated, rec.Code)
 
 	var responseBody map[string]interface{}
 	err := json.Unmarshal(rec.Body.Bytes(), &responseBody)
@@ -147,6 +152,36 @@ func (suite *UserControllerTestSuite) TestCreateEmailTaken() {
 
 	data := responseBody["error"].(string)
 	assert.Equal(suite.T(), "Email already taken", data)
+}
+
+func (suite *UserControllerTestSuite) TestUploadPhoto() {
+	suite.Routes.POST(suite.UploadPhotoPath, controllers.UploadPhoto)
+
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+
+	fileWriter, err := writer.CreateFormFile("photo", "test.jpg")
+	assert.NoError(suite.T(), err)
+
+	_, err = io.Copy(fileWriter, bytes.NewReader([]byte("dummy file content")))
+	assert.NoError(suite.T(), err)
+
+	writer.Close()
+
+	req, _ := http.NewRequest(http.MethodPost, suite.UploadPhotoPath, &body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	rec := httptest.NewRecorder()
+
+	suite.Routes.ServeHTTP(rec, req)
+
+	assert.Equal(suite.T(), http.StatusOK, rec.Code)
+
+	var responseBody map[string]interface{}
+	err = json.Unmarshal(rec.Body.Bytes(), &responseBody)
+	assert.NoError(suite.T(), err)
+
+	data := responseBody["data"].(map[string]interface{})
+	assert.NotEmpty(suite.T(), data["photo"])
 }
 
 func TestUserControllerTestSuite(t *testing.T) {
