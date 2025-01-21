@@ -23,7 +23,7 @@ func right(c *gin.Context) {
 	userID := uint(claims["sub"].(float64))
 
 	var existingUser models.User
-	config.DB.First(&existingUser, uint(userID))
+	config.DB.First(&existingUser, swipe.RSwipeID)
 
 	if existingUser.ID == 0 {
 		c.JSON(400, gin.H{
@@ -81,7 +81,7 @@ func left(c *gin.Context) {
 	userID := uint(claims["sub"].(float64))
 
 	var existingUser models.User
-	config.DB.First(&existingUser, uint(userID))
+	config.DB.First(&existingUser, swipe.LSwipeID)
 
 	if existingUser.ID == 0 {
 		c.JSON(400, gin.H{
