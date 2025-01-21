@@ -13,7 +13,7 @@ import (
 func SwipeRoutes(route *gin.Engine) {
 	swipe := route.Group("/swipes", auth.AuthenticateMiddleware)
 	swipe.POST("/right", Right)
-	swipe.POST("/left", left)
+	swipe.POST("/left", Left)
 }
 
 func Right(c *gin.Context) {
@@ -74,7 +74,7 @@ func Right(c *gin.Context) {
 	})
 }
 
-func left(c *gin.Context) {
+func Left(c *gin.Context) {
 	var swipe models.LSwipe
 	c.ShouldBindJSON(&swipe)
 	claims := c.MustGet("claims").(jwt.MapClaims)
@@ -126,4 +126,9 @@ func left(c *gin.Context) {
 
 	config.DB.Create(&swipe)
 	config.DB.Model(&existingUser).Update("swipe_num", existingUser.SwipeNum-1)
+
+	c.JSON(201, gin.H{
+		"data": swipe,
+		"user": existingUser,
+	})
 }
