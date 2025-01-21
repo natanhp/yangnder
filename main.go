@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/natanhp/yangnder/config"
 	"github.com/natanhp/yangnder/controllers"
 	"github.com/natanhp/yangnder/scheduler"
@@ -9,6 +10,7 @@ import (
 
 func init() {
 	config.Connect()
+	godotenv.Load()
 }
 
 func main() {

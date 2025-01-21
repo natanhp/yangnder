@@ -1,11 +1,13 @@
 package auth
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var secretKey = []byte("secret")
+var secretKey = []byte(os.Getenv("JWT_SECRET"))
 
 func CreateToken(id uint) (string, error) {
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{

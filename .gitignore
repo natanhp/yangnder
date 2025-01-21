@@ -2,3 +2,4 @@ docs/erd/*.bak
 gorm.db
 photos/
 __debug_*
+.env
