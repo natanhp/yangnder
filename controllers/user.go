@@ -15,14 +15,14 @@ import (
 
 func UserRoutes(route *gin.Engine) {
 	user := route.Group("/users")
-	user.GET("", auth.AuthenticateMiddleware, findAll)
+	user.GET("", auth.AuthenticateMiddleware, FindAll)
 	user.POST("/register", create)
 	user.GET("/detail", auth.AuthenticateMiddleware, findOne)
 	user.POST("/upload-photo", auth.AuthenticateMiddleware, uploadPhoto)
 	user.POST("/login", login)
 }
 
-func findAll(c *gin.Context) {
+func FindAll(c *gin.Context) {
 	var users []models.User
 	claims := c.MustGet("claims").(jwt.MapClaims)
 	id := uint(claims["sub"].(float64))
