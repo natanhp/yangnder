@@ -17,8 +17,9 @@ import (
 
 type PremiumControllerTestSuite struct {
 	suite.Suite
-	DB     *gorm.DB
-	Routes *gin.Engine
+	DB      *gorm.DB
+	Routes  *gin.Engine
+	BuyPath string
 }
 
 func (suite *PremiumControllerTestSuite) SetupSuite() {
@@ -28,6 +29,8 @@ func (suite *PremiumControllerTestSuite) SetupSuite() {
 
 	config.DB = DBTest
 	suite.DB = DBTest
+
+	suite.BuyPath = "/premiums/buy"
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
@@ -43,9 +46,9 @@ func (suite *PremiumControllerTestSuite) TestGetPremium() {
 		c.Next()
 	})
 
-	suite.Routes.PATCH("/premiums/buy", controllers.BuyPremium)
+	suite.Routes.PATCH(suite.BuyPath, controllers.BuyPremium)
 
-	req, _ := http.NewRequest(http.MethodPatch, "/premiums/buy", nil)
+	req, _ := http.NewRequest(http.MethodPatch, suite.BuyPath, nil)
 	rec := httptest.NewRecorder()
 
 	suite.Routes.ServeHTTP(rec, req)
