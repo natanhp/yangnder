@@ -25,8 +25,7 @@ func UserRoutes(route *gin.Engine) {
 
 func FindAll(c *gin.Context) {
 	var users []models.User
-	claims := c.MustGet("claims").(jwt.MapClaims)
-	id := uint(claims["sub"].(float64))
+	id := getId(c)
 
 	query := `
 		SELECT 
@@ -69,6 +68,12 @@ func FindAll(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"data": users,
 	})
+}
+
+func getId(c *gin.Context) uint {
+	claims := c.MustGet("claims").(jwt.MapClaims)
+	id := uint(claims["sub"].(float64))
+	return id
 }
 
 func FindOne(c *gin.Context) {
@@ -125,8 +130,7 @@ func Create(c *gin.Context) {
 
 func UploadPhoto(c *gin.Context) {
 	var user models.User
-	claims := c.MustGet("claims").(jwt.MapClaims)
-	id := uint(claims["sub"].(float64))
+	id := getId(c)
 
 	config.DB.First(&user, id)
 
