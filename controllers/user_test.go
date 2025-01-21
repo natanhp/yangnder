@@ -11,6 +11,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/natanhp/yangnder/config"
 	"github.com/natanhp/yangnder/controllers"
+	"github.com/natanhp/yangnder/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
@@ -113,6 +114,39 @@ func (suite *UserControllerTestSuite) TestCreate() {
 
 	data := responseBody["data"].(map[string]interface{})
 	assert.Equal(suite.T(), "asdas3@asdsad.com", data["email"])
+}
+
+func (suite *UserControllerTestSuite) TestCreateEmailTaken() {
+	suite.Routes.POST(suite.CreatePath, controllers.Create)
+
+	payload := `
+		{
+			"email": "asdas3@asdsad.com",
+			"password": "asd123",
+			"name": "Adadasd",
+			"desc": "Lorem ipsum",
+			"dob": "2020-01-01"
+		}
+	`
+
+	createUser := models.User{}
+	json.Unmarshal([]byte(payload), &createUser)
+	suite.DB.Create(&createUser)
+
+	req, _ := http.NewRequest(http.MethodPost, suite.CreatePath, strings.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	suite.Routes.ServeHTTP(rec, req)
+
+	assert.Equal(suite.T(), http.StatusBadRequest, rec.Code)
+
+	var responseBody map[string]interface{}
+	err := json.Unmarshal(rec.Body.Bytes(), &responseBody)
+	assert.NoError(suite.T(), err)
+
+	data := responseBody["error"].(string)
+	assert.Equal(suite.T(), "Email already taken", data)
 }
 
 func TestUserControllerTestSuite(t *testing.T) {
