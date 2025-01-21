@@ -184,6 +184,24 @@ func (suite *UserControllerTestSuite) TestUploadPhoto() {
 	assert.NotEmpty(suite.T(), data["photo"])
 }
 
+func (suite *UserControllerTestSuite) TestUploadPhotoEmpty() {
+	suite.Routes.POST(suite.UploadPhotoPath, controllers.UploadPhoto)
+
+	req, _ := http.NewRequest(http.MethodPost, suite.UploadPhotoPath, nil)
+	rec := httptest.NewRecorder()
+
+	suite.Routes.ServeHTTP(rec, req)
+
+	assert.Equal(suite.T(), http.StatusBadRequest, rec.Code)
+
+	var responseBody map[string]interface{}
+	err := json.Unmarshal(rec.Body.Bytes(), &responseBody)
+	assert.NoError(suite.T(), err)
+
+	data := responseBody["error"].(string)
+	assert.Equal(suite.T(), "Photo is required", data)
+}
+
 func TestUserControllerTestSuite(t *testing.T) {
 	suite.Run(t, new(UserControllerTestSuite))
 }
