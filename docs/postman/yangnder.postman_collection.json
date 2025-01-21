@@ -1,0 +1,273 @@
+{
+	"info": {
+		"_postman_id": "c49653d5-4e13-4b08-adb7-fb12cdbfbcc5",
+		"name": "yangnder",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "8726469"
+	},
+	"item": [
+		{
+			"name": "users",
+			"item": [
+				{
+					"name": "findAll",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/users",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"asdas3@asdsad.com\",\n  \"password\": \"asd123\",\n  \"name\": \"Adadasd\",\n  \"desc\": \"Lorem ipsum\",\n  \"dob\": \"2020-01-01\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/users/register",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "detail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/users/detail/1",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"detail",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "upload",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/home/natanhp/Pictures/memes/photo(1).png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{host}}/users/upload-photo",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"upload-photo"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"asdas1@asdsad.com\",\n    \"password\": \"asd123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/users/login",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "photo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/users/photos/1737440660-photo(1).png",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"photos",
+								"1737440660-photo(1).png"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "swipes",
+			"item": [
+				{
+					"name": "right",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"r_swipe_id\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/swipes/right",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"swipes",
+								"right"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "left",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"l_swipe_id\": 11\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/swipes/left",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"swipes",
+								"left"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "premium",
+			"item": [
+				{
+					"name": "buy",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/premiums/buy",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"premiums",
+								"buy"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjF9.c4QDvOpuW4LCyqwzyPEVo4q4pqnBk23RkSYKuBab1s4",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "host",
+			"value": "localhost:8080",
+			"type": "string"
+		}
+	]
+}
