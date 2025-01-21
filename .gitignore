@@ -1,2 +1,4 @@
 docs/erd/*.bak
 gorm.db
+photos/
+__debug_*
