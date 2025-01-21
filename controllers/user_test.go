@@ -235,6 +235,26 @@ func (suite *UserControllerTestSuite) TestLogin() {
 	assert.NotEmpty(suite.T(), token)
 }
 
+func (suite *UserControllerTestSuite) TestLoginInvalidEmail() {
+	suite.Routes.POST(suite.LoginPath, controllers.Login)
+
+	payload := `{ "email": "gjls@gibberish.com" }`
+	req, _ := http.NewRequest(http.MethodPost, suite.LoginPath, strings.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	suite.Routes.ServeHTTP(rec, req)
+
+	assert.Equal(suite.T(), http.StatusBadRequest, rec.Code)
+
+	var responseBody map[string]interface{}
+	err := json.Unmarshal(rec.Body.Bytes(), &responseBody)
+	assert.NoError(suite.T(), err)
+
+	data := responseBody["error"].(string)
+	assert.Equal(suite.T(), "Invalid email or password", data)
+}
+
 func TestUserControllerTestSuite(t *testing.T) {
 	suite.Run(t, new(UserControllerTestSuite))
 }
