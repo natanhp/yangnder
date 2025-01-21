@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"log"
 	"time"
 
 	"github.com/natanhp/yangnder/config"
@@ -14,13 +15,13 @@ func resetSwipeNumber() {
 	})
 }
 
-// func deleteLSwipes() {
-// 	var lSwipes []models.LSwipe
-// 	config.DB.Find(&lSwipes).Delete(&lSwipes)
-// }
+func deleteLSwipes() {
+	config.DB.Where("delete_on <= ?", time.Now()).Delete(&models.LSwipe{})
+}
 
 func Start() {
+	log.Default().Println("Scheduler started")
 	resetSwipeNumber()
-	// deleteLSwipes()
+	deleteLSwipes()
 	time.Sleep(5 * time.Minute)
 }
