@@ -41,10 +41,21 @@ func right(c *gin.Context) {
 		return
 	}
 
-	var existingSwipe models.RSwipe
-	config.DB.Where("user_id = ? AND r_swipe_id = ?", userID, swipe.RSwipeID).First(&existingSwipe)
+	var existingRSwipe models.RSwipe
+	config.DB.Where("user_id = ? AND r_swipe_id = ?", userID, swipe.RSwipeID).First(&existingRSwipe)
 
-	if existingSwipe.UserID != 0 {
+	if existingRSwipe.UserID != 0 {
+		c.JSON(400, gin.H{
+			"error": "Already swiped",
+		})
+
+		return
+	}
+
+	var existingLSwipe models.LSwipe
+	config.DB.Where("user_id = ? AND l_swipe_id = ?", userID, swipe.RSwipeID).First(&existingLSwipe)
+
+	if existingLSwipe.UserID != 0 {
 		c.JSON(400, gin.H{
 			"error": "Already swiped",
 		})
@@ -66,16 +77,18 @@ func right(c *gin.Context) {
 func left(c *gin.Context) {
 	var swipe models.LSwipe
 	c.ShouldBindJSON(&swipe)
-
-	// Todo: Get user from token
+	claims := c.MustGet("claims").(jwt.MapClaims)
+	userID := uint(claims["sub"].(float64))
 
 	var existingUser models.User
-	config.DB.First(&existingUser, swipe.UserID)
+	config.DB.First(&existingUser, uint(userID))
 
 	if existingUser.ID == 0 {
 		c.JSON(400, gin.H{
 			"error": "User not found",
 		})
+
+		return
 	}
 
 	if existingUser.SwipeNum <= 0 {
@@ -83,8 +96,32 @@ func left(c *gin.Context) {
 			"error": "Out of swipes",
 		})
 
+		return
 	}
 
+	var existingRSwipe models.RSwipe
+	config.DB.Where("user_id = ? AND r_swipe_id = ?", userID, swipe.LSwipeID).First(&existingRSwipe)
+
+	if existingRSwipe.UserID != 0 {
+		c.JSON(400, gin.H{
+			"error": "Already swiped",
+		})
+
+		return
+	}
+
+	var existingLSwipe models.LSwipe
+	config.DB.Where("user_id = ? AND l_swipe_id = ?", userID, swipe.LSwipeID).First(&existingLSwipe)
+
+	if existingLSwipe.UserID != 0 {
+		c.JSON(400, gin.H{
+			"error": "Already swiped",
+		})
+
+		return
+	}
+
+	swipe.UserID = userID
 	swipe.DeleteOn = time.Now().AddDate(0, 0, 1)
 
 	config.DB.Create(&swipe)
