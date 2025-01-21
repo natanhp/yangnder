@@ -125,6 +125,39 @@ func (suite *SwipesControllerTestSuite) TestRightOutOfSwipe() {
 	assert.Equal(suite.T(), "Out of swipes", data)
 }
 
+func (suite *SwipesControllerTestSuite) TestRightAlreadyRSwiped() {
+	claims := jwt.MapClaims{
+		"sub": float64(1),
+	}
+	suite.Routes.Use(func(c *gin.Context) {
+		c.Set("claims", claims)
+		c.Next()
+	})
+
+	suite.Routes.PATCH("/swipes/right", controllers.Right)
+
+	suite.DB.Create(&models.RSwipe{
+		UserID:   1,
+		RSwipeID: 2,
+	})
+
+	payload := `{ "r_swipe_id": 2 }`
+	req, _ := http.NewRequest(http.MethodPatch, "/swipes/right", strings.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	suite.Routes.ServeHTTP(rec, req)
+
+	assert.Equal(suite.T(), http.StatusBadRequest, rec.Code)
+
+	var responseBody map[string]interface{}
+	err := json.Unmarshal(rec.Body.Bytes(), &responseBody)
+	assert.NoError(suite.T(), err)
+
+	data := responseBody["error"].(string)
+	assert.Equal(suite.T(), "Already swiped", data)
+}
+
 func TestSwipeControllerTestSuite(t *testing.T) {
 	suite.Run(t, new(SwipesControllerTestSuite))
 }
