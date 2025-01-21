@@ -11,6 +11,7 @@ type User struct {
 	Name           string    `json:"name"`
 	DOB            string    `json:"dob" gorm:"type:date"`
 	DESC           string    `json:"desc"`
+	IsVerified     bool      `json:"is_verified" gorm:"default:false"`
 	Photo          string    `json:"photo"`
 	SwipeNum       int       `json:"swipe_num"`
 	NextSwipeReset time.Time `json:"-"`

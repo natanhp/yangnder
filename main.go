@@ -15,6 +15,7 @@ func main() {
 	r := gin.Default()
 	controllers.UserRoutes(r)
 	controllers.SwipeRoutes(r)
+	controllers.PremiumRoutes(r)
 
 	go func() {
 		for {
