@@ -12,11 +12,11 @@ import (
 
 func SwipeRoutes(route *gin.Engine) {
 	swipe := route.Group("/swipes", auth.AuthenticateMiddleware)
-	swipe.POST("/right", right)
+	swipe.POST("/right", Right)
 	swipe.POST("/left", left)
 }
 
-func right(c *gin.Context) {
+func Right(c *gin.Context) {
 	var swipe models.RSwipe
 	c.ShouldBindJSON(&swipe)
 	claims := c.MustGet("claims").(jwt.MapClaims)
