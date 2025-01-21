@@ -1,4 +1,4 @@
-package users
+package controllers
 
 import (
 	"time"
@@ -9,7 +9,7 @@ import (
 	"github.com/natanhp/yangnder/models"
 )
 
-func Routes(route *gin.Engine) {
+func UserRoutes(route *gin.Engine) {
 	user := route.Group("/users")
 	user.GET("", findAll)
 	user.POST("/register", create)

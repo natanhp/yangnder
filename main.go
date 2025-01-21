@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/natanhp/yangnder/config"
-	users "github.com/natanhp/yangnder/controllers"
+	"github.com/natanhp/yangnder/controllers"
 )
 
 func init() {
@@ -12,6 +12,7 @@ func init() {
 
 func main() {
 	r := gin.Default()
-	users.Routes(r)
+	controllers.UserRoutes(r)
+	controllers.SwipeRoutes(r)
 	r.Run()
 }
