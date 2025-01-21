@@ -24,7 +24,46 @@ func UserRoutes(route *gin.Engine) {
 
 func findAll(c *gin.Context) {
 	var users []models.User
-	config.DB.Find(&users)
+	claims := c.MustGet("claims").(jwt.MapClaims)
+	id := uint(claims["sub"].(float64))
+
+	query := `
+		SELECT 
+		id, 
+		email, 
+		name, 
+		dob, 
+		desc, 
+		photo 
+		FROM 
+		users 
+		WHERE 
+		id != ? 
+		AND id NOT IN (
+			SELECT 
+			r_swipe_id 
+			FROM 
+			r_swipes 
+			WHERE 
+			user_id = ? 
+			UNION 
+			SELECT 
+			l_swipe_id 
+			FROM 
+			l_swipes 
+			WHERE 
+			user_id = ?
+		)
+	`
+	err := config.DB.Raw(query, id, id, id).Scan(&users).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": "Failed to fetch users",
+		})
+		return
+
+	}
 
 	c.JSON(200, gin.H{
 		"data": users,
